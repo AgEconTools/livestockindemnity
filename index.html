@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Livestock Indemnity Estimator</title>
+<meta name="description" content="Estimate a USDA Livestock Indemnity Program (LIP) payment for cattle lost to weather, disease or a protected predator, and see what to do after a loss and by when.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mississippi State University Extension">
+<meta property="og:title" content="Livestock Indemnity Estimator">
+<meta property="og:description" content="Estimate a USDA Livestock Indemnity Program (LIP) payment for cattle lost to weather, disease or a protected predator, and see what to do after a loss.">
+<meta property="og:url" content="https://agecontools.github.io/livestockindemnity/">
+<meta property="og:image" content="https://agecontools.github.io/livestockindemnity/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Livestock Indemnity Estimator: estimate a USDA LIP payment for cattle losses. Mississippi State University Extension.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://agecontools.github.io/livestockindemnity/">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- Visit counts: GoatCounter, no cookies and no personal data (Josh, 11/2026). It skips localhost. -->
+<script data-goatcounter="https://agecontools.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<meta name="version" content="1">
+<meta name="generated" content="2026-11-23T10:57:35-06:00">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* fonts bundled in fonts/ (Fontsource, OFL); nothing is loaded from outside the site */
+@font-face { font-family: "Bitter"; font-weight: 600; font-style: normal; font-display: swap; src: url(fonts/bitter-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Bitter"; font-weight: 700; font-style: normal; font-display: swap; src: url(fonts/bitter-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/public-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/public-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 600; font-style: normal; font-display: swap; src: url(fonts/public-sans-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 700; font-style: normal; font-display: swap; src: url(fonts/public-sans-latin-700-normal.woff2) format("woff2"); }
+/* The drought tracker's look (maroon masthead, tabs, cards, MSU footer), with an estimator in place of maps. */
+:root {
+  --bg: #f7f5f5; --surface: #ffffff; --ink: #1c1c1c; --ink-2: #4a4446; --muted: #6f686a; --rule: #e4dfe0;
+  --accent: #5d1725; --accent-ink: #ffffff; --accent-soft: #f3e9eb; --link: #8a2236; --focus: #c99700;
+  --ok: #2e6b3f; --ok-bg: #e6f2e9; --warn-bg: #fff3d6; --warn-ink: #7a4600; --field: #ffffff;
+  --display: "Bitter", Georgia, "Times New Roman", serif;
+  --body: "Public Sans", Arial, Helvetica, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151112; --surface: #1f191b; --ink: #f1ecee; --ink-2: #cfc6c9; --muted: #a59a9e;
+    --rule: #3a3134; --accent: #6e1d2e; --accent-soft: #33212a; --link: #f0a3b3; --focus: #e2b93b;
+    --ok: #86c995; --ok-bg: #1d3324; --warn-bg: #3b2c0e; --warn-ink: #f6c56a; --field: #2a2326; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151112; --surface: #1f191b; --ink: #f1ecee; --ink-2: #cfc6c9; --muted: #a59a9e;
+  --rule: #3a3134; --accent: #6e1d2e; --accent-soft: #33212a; --link: #f0a3b3; --focus: #e2b93b;
+  --ok: #86c995; --ok-bg: #1d3324; --warn-bg: #3b2c0e; --warn-ink: #f6c56a; --field: #2a2326; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1080px; margin: 0 auto;
+        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--link); }
+
+/* masthead */
+.mast { background: var(--accent); color: var(--accent-ink); }
+.mast .wrap { padding-block: 22px 20px; display: grid; gap: 14px; grid-template-columns: 1fr auto; align-items: end; }
+h1 { font: 700 clamp(28px, 5vw, 40px)/1.08 var(--display); margin: 0; text-wrap: balance; }
+.asof { margin: 6px 0 0; font-size: 14px; opacity: .88; }
+.asof.edu { margin-top: 2px; font-size: 13px; }
+.asof a { color: inherit; }
+.asof.stale { display: inline-block; background: var(--warn-bg); color: var(--warn-ink); font-weight: 600; padding: 2px 8px; border-radius: 4px; opacity: 1; }
+.pickers { display: flex; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.picker { display: grid; gap: 4px; min-width: 0; }
+.picker label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+.picker select { appearance: none; -webkit-appearance: none; background: var(--surface); color: var(--ink);
+  border: 0; border-radius: 8px; padding: 11px 40px 11px 14px; font-weight: 600; font-size: 16px;
+  min-width: 200px; max-width: 100%; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; }
+
+/* tabs */
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-block: 8px; }
+.tab { flex: 0 0 auto; border: 0; background: transparent; padding: 9px 14px; border-radius: 999px;
+       font-weight: 600; font-size: 15px; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.tab:hover { background: var(--accent-soft); color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+@media (max-width: 420px) { .tabs .wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding-block: 4px; }
+  .tab { padding: 6px 4px; font-size: 14px; text-align: center; } }
+
+/* panels */
+main { padding-block: 26px 40px; }
+.panel { display: grid; gap: 22px; }
+.panel[hidden] { display: none; }
+.panel > * { min-width: 0; }
+h2 { font: 700 clamp(22px, 3.4vw, 28px)/1.2 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 700 18px/1.3 var(--body); margin: 0; }
+.sub { margin: 4px 0 0; color: var(--ink-2); font-size: 15px; max-width: 70ch; }
+.note { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 74ch; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: 18px; }
+.callout { border-left: 4px solid var(--warn-ink); background: var(--warn-bg); color: var(--ink);
+           padding: 10px 14px; border-radius: 6px; font-size: 14.5px; margin: 0; }
+.callout[hidden] { display: none; }
+
+/* estimator */
+.est { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+.est > * { min-width: 0; }
+.form { display: grid; gap: 18px; }
+.row3 { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span, .field > label, .lbl { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.field input, .field select { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--field); min-width: 0; }
+.field input { width: 100%; font-variant-numeric: tabular-nums; }
+.field.narrow input { width: 96px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 8px 14px; cursor: pointer; font-size: 14.5px; color: var(--ink-2); text-align: left; }
+.seg button small { display: block; font-size: 12px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button[aria-pressed="true"] small { color: inherit; opacity: .85; }
+.cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 12px; }
+fieldset.cat { margin: 0; border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px 12px; display: grid; gap: 8px; min-width: 0; }
+fieldset.cat legend { font-weight: 700; padding: 0 4px; font-size: 15px; }
+fieldset.cat .pair { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 8px; align-items: center; }
+fieldset.cat .pair label { font-size: 13.5px; color: var(--ink-2); line-height: 1.3; }
+fieldset.cat .pair input { padding: 6px 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--field);
+                           width: 90px; text-align: right; font-variant-numeric: tabular-nums; }
+fieldset.cat .pair.nm label small { display: block; color: var(--muted); font-size: 12px; }
+details.more { border: 1px solid var(--rule); border-radius: 8px; padding: 0 12px; }
+details.more > summary { cursor: pointer; color: var(--link); font-weight: 600; padding: 10px 0; }
+details.more[open] { padding-bottom: 12px; }
+details.more .cats { margin-top: 4px; }
+.formbtns { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 9px 16px; border-radius: 999px; font-weight: 600; cursor: pointer; }
+.btn.main { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn:hover { filter: brightness(1.08); }
+.result { position: sticky; top: 70px; display: grid; gap: 12px; }
+.result .k { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.result .v { font: 700 38px/1.1 var(--body); margin: 2px 0 0; font-variant-numeric: tabular-nums; color: var(--accent); }
+:root[data-theme="dark"] .result .v { color: var(--link); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .result .v { color: var(--link); } }
+.result .s { margin: 0; font-size: 14px; color: var(--ink-2); }
+table.bd { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+table.bd th { text-align: left; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px 4px; border-bottom: 2px solid var(--rule); }
+table.bd td { padding: 6px 4px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.bd .n { text-align: right; white-space: nowrap; }
+table.bd tfoot td { font-weight: 700; border-bottom: 0; }
+.how { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
+.how li { max-width: 70ch; }
+/* phones: the running total stays in view at the bottom while the form is filled in */
+.mini { display: none; }
+@media (max-width: 900px) {
+  .mini { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; bottom: 0; z-index: 4;
+          margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--accent); color: var(--accent-ink);
+          font-weight: 600; text-decoration: none; box-shadow: 0 -4px 14px rgba(0,0,0,.15); }
+  .mini b { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .mini[hidden] { display: none; }
+}
+@media print { .mini { display: none !important; } }
+.deadline { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); font-size: 14.5px; }
+
+/* What to do, About: short sections, each ending in its source */
+.about { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.about .card { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }   /* else the values table widens a phone page */
+.about p, .about li { margin: 0; font-size: 14.5px; color: var(--ink-2); max-width: 78ch; }
+.about ul, .about ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.about .src { font-size: 13px; color: var(--muted); }
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.btnlink { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 999px;
+           background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+.btnlink.alt { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); }
+.btnlink:hover { filter: brightness(1.1); }
+table.vals { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; width: 100%; max-width: 640px; }
+table.vals th { text-align: left; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--rule); }
+table.vals td { padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+table.vals .n { text-align: right; white-space: nowrap; }
+#about-how, #about-src, #steps-records { scroll-margin-top: 90px; }
+
+/* footer */
+footer { border-top: 1px solid var(--rule); background: var(--surface); }
+footer .wrap { padding-block: 26px 40px; display: grid; gap: 14px; }
+footer .wrap > * { min-width: 0; }   /* else the tools strip's grid widens the page on a phone */
+footer h2 { font-size: 20px; }
+footer .legal { display: grid; gap: 8px; }
+/* the Extension logo at MSU's minimum for the horizontal mark, 300 x 52 px or more: never shrunk on a phone */
+.legal .home { display: block; justify-self: start; width: 300px; color: var(--ink); line-height: 0; }
+.legal .logo { width: 300px; min-width: 300px; height: auto; flex: none; display: block; margin: 0 0 14px; }
+/* Footer logo: Ag Communications (11/2026) wants the official maroon file on the light page and the
+   official white file on the dark page, never a recolored copy. One shows per theme; the other is
+   display:none so screen readers hear one logo. Fixed at 300 px, MSU's minimum; never shrinks. */
+.legal .logo-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .legal .logo-light { display: none; }
+  :root:not([data-theme="light"]) .legal .logo-dark { display: block; }
+}
+:root[data-theme="dark"] .legal .logo-light { display: none; }
+:root[data-theme="dark"] .legal .logo-dark { display: block; }
+/* Links between the MSU Extension tools (11/2026; ADDRESS_STANDARD.md): "More cattle tools" and
+   "Share this view" in the masthead, and the other tools at the top of the footer. Each project keeps
+   its own copy; change the cattle tools together. */
+.asof.tools-line { margin-top: 6px; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.share-btn { all: unset; cursor: pointer; text-decoration: underline; color: inherit; font: inherit; }
+.share-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 2px; }
+/* the copy-by-hand box, shown only when the clipboard is blocked */
+.share-box { margin-top: 8px; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.share-box[hidden] { display: none; }
+.share-box input { flex: 1 1 18em; min-width: 0; max-width: 40em; font: inherit; font-size: 14px; padding: 6px 8px; border-radius: 4px;
+  border: 1px solid currentColor; background: rgba(255, 255, 255, .12); color: inherit; }
+.share-box input:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+@media print { .share-box { display: none; } }
+.tools-strip { margin: 0 0 24px; scroll-margin-top: 80px; }   /* clears the sticky tab bar */
+.tools-strip h2 { margin: 0 0 10px; }
+.tools-strip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.tools-strip a { display: flex; gap: 12px; align-items: flex-start; height: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.tools-strip a:hover { border-color: var(--accent); }
+.tools-strip a:hover b { text-decoration: underline; }
+.tools-strip svg { width: 36px; height: 36px; flex: none; border-radius: 7px; }
+.tools-strip b { display: block; font-size: 15px; line-height: 1.3; }
+.tools-strip a > span > span { display: block; font-size: 13px; line-height: 1.4; color: var(--muted); margin-top: 3px; }
+@media print { .tools-line, .tools-strip, .tabs, .formbtns { display: none; } .result { position: static; } }
+/* touch screens: links, buttons and fields at least 40 px tall */
+@media (pointer: coarse) {
+  .asof.edu a, .asof.tools-line a, .share-btn { display: inline-flex; align-items: center; min-height: 40px; }
+  .asof.tools-line { margin-top: 0; }
+  .tab, .seg button, .btn { min-height: 40px; }
+  fieldset.cat .pair input, .field input, .field select { min-height: 40px; font-size: 16px; }
+  details.more > summary { padding: 12px 0; }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+footer ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; color: var(--ink-2); max-width: 80ch; }
+.disc { border: 1px solid var(--rule); border-left: 4px solid var(--ink-2); background: var(--bg); border-radius: 8px;
+        padding: 14px 16px; max-width: 80ch; display: grid; gap: 6px; }
+.disc h2 { font-size: 17px; }
+.disc p { margin: 0; font-size: 14.5px; }
+
+@media (max-width: 900px) {
+  .est { grid-template-columns: 1fr; }
+  .result { position: static; }
+}
+@media (max-width: 640px) {
+  .mast .wrap { grid-template-columns: 1fr; }
+  .picker, .picker select { width: 100%; min-width: 0; }
+  .pickers { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .seg { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .result .v { font-size: 32px; }
+}
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <div>
+      <h1>Livestock Indemnity Estimator</h1>
+      <p class="asof" id="asof">Loading FSA's market values…</p>
+      <p class="asof stale" id="stale" hidden></p>
+      <p class="asof edu">For educational use only. <a href="#disclaimer">Read the disclaimer</a>.</p>
+      <p class="asof tools-line"><a href="#more-tools">More cattle tools</a><button type="button" class="share-btn" id="share-view">Share this view</button><span class="sr-only" role="status" id="share-msg"></span></p>
+      <div class="share-box" id="share-box" hidden><label for="share-url">Copy this link:</label><input id="share-url" type="text" readonly spellcheck="false"><button type="button" class="share-btn" id="share-close">Close</button></div>
+    </div>
+    <div class="pickers">
+      <div class="picker">
+        <label for="state">State</label>
+        <select id="state"><option value="">Any state</option></select>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Pages">
+  <div class="wrap" role="tablist" id="tablist">
+    <button class="tab" role="tab" id="t-estimate" aria-controls="estimate" data-tab="estimate">Estimate</button>
+    <button class="tab" role="tab" id="t-steps" aria-controls="steps" data-tab="steps">What to do</button>
+    <button class="tab" role="tab" id="t-about" aria-controls="about" data-tab="about">About</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <noscript><p class="callout">This page needs JavaScript to work out the estimate.</p></noscript>
+
+  <!-- Estimate -->
+  <section class="panel" id="estimate" role="tabpanel" aria-labelledby="t-estimate">
+    <div>
+      <h2>Estimate a Livestock Indemnity Program payment</h2>
+      <p class="sub">USDA's Livestock Indemnity Program (LIP) pays for cattle that die from extreme weather, certain
+        diseases or an attack by a federally protected predator, beyond the normal death loss for the herd. Enter what
+        you lost to see what LIP may pay. Your county FSA office makes the actual decision.</p>
+    </div>
+    <div class="est">
+      <form class="form card" id="form" autocomplete="off" novalidate>
+        <div class="row3">
+          <div class="field">
+            <label for="year">Year of the loss</label>
+            <select id="year"></select>
+          </div>
+          <div class="field narrow">
+            <label for="share">Your share of the cattle, %</label>
+            <input id="share" type="number" inputmode="decimal" min="0" max="100" step="any" value="100">
+          </div>
+        </div>
+        <div class="field">
+          <span id="cause-l">What caused the loss</span>
+          <div class="seg" role="group" aria-labelledby="cause-l" id="cause">
+            <button type="button" data-v="weather" aria-pressed="true">Weather<small>75% of market value</small></button>
+            <button type="button" data-v="disease" aria-pressed="false">Disease made worse by weather<small>75%</small></button>
+            <button type="button" data-v="attack" aria-pressed="false">Protected predator<small>100%</small></button>
+          </div>
+          <p class="note" id="cause-note"></p>
+        </div>
+        <div>
+          <h3>Your cattle</h3>
+          <p class="note">Fill in only the groups you lost. "On hand" is the head of that group you had when the event
+            began. Normal mortality is filled in with <span id="nm-src">FSA's national rate</span>; change it if your
+            county office gives you another.</p>
+        </div>
+        <div class="cats" id="cats"></div>
+        <details class="more" id="sold-d">
+          <summary>Cattle injured and sold at a lower price</summary>
+          <p class="note">Cattle hurt by the weather event or attack and sold within 30 days after it ended, to a sale
+            barn, packer or renderer. LIP pays the difference between its payment rate and what the sale brought.
+            Not for disease losses.</p>
+          <div class="cats" id="sold"></div>
+        </details>
+        <details class="more" id="own-d">
+          <summary>Use your own sale price (optional)</summary>
+          <p class="note">If you sold cattle of the same kind and weight this year for more than FSA's value, a sale
+            receipt lets FSA use your price instead, up to 145% of its value.</p>
+          <div class="cats" id="own"></div>
+        </details>
+        <div class="formbtns">
+          <button type="button" class="btn main" id="print">Print this estimate</button>
+          <button type="button" class="btn" id="clear">Clear</button>
+        </div>
+        <p class="note">What you type stays in this browser only; nothing is sent anywhere.</p>
+      </form>
+      <aside class="card result" id="result" aria-labelledby="res-h">
+        <h3 id="res-h" class="sr-only">Your estimate</h3>
+        <div>
+          <p class="k">Estimated LIP payment</p>
+          <p class="v" id="total" aria-live="polite">$0</p>
+          <p class="s" id="total-s">Enter the cattle you lost.</p>
+        </div>
+        <div id="bd"></div>
+        <p class="deadline" id="deadline"></p>
+        <p class="note" id="res-note">An estimate only. FSA decides eligibility, the head it pays on and the rate.
+          <a href="#about-how" data-goto="about-how">How this is figured</a>.</p>
+      </aside>
+    </div>
+    <a class="mini" id="mini" href="#result" hidden>Estimated LIP payment <b id="mini-t">$0</b></a>
+  </section>
+
+  <!-- What to do -->
+  <section class="panel" id="steps" role="tabpanel" aria-labelledby="t-steps" hidden>
+    <div>
+      <h2>What to do after a loss</h2>
+      <p class="sub">LIP is paid on records. What you write down and keep in the first days after a loss decides what
+        FSA can pay.</p>
+    </div>
+    <div class="about">
+      <div class="card">
+        <h3>1. Right away</h3>
+        <ul>
+          <li>Count the dead animals by group (cows, bulls, calves by weight) and write down the date and what happened.</li>
+          <li>Take dated photos of the animals and of the damage: flooded pasture, downed fences, storm damage, burned ground.</li>
+          <li>Keep receipts for disposal or rendering. A rendering truck receipt with head and weights is good evidence.</li>
+          <li>For a disease loss, get a veterinarian's report naming the disease and the cause of death.</li>
+          <li>Note which dead cows were bred. FSA asks for breeding or pregnancy check records only if it needs them, so keep them.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>2. Show the event happened</h3>
+        <ul>
+          <li>Weather records from the National Weather Service or NOAA for your area and dates, news reports, or your own
+            weather station's data if it was posted publicly at the time.</li>
+          <li>Extreme heat: FSA's guideline looks for a temperature-humidity index above 84 for two days in a row, without
+            nights cooling below 75, and heat that is unusual for that time of year. Your state FSA committee sets the
+            exact test.</li>
+          <li>Extreme cold: FSA's guideline uses wind chill, for example -20&deg;F for calves under 800 lb and -40&deg;F for
+            cows and bulls, for two days or more. Here too your state committee sets the thresholds.</li>
+          <li>Drought is not a LIP loss (except anthrax that comes with drought). Grazing losses to drought are covered by
+            a different program, LFP: see the <a href="../drought/#lfp" data-tool-link="drought">Beef Cattle Drought Tracker</a>.</li>
+        </ul>
+      </div>
+      <div class="card" id="steps-records">
+        <h3>3. Have your herd records ready</h3>
+        <ul>
+          <li>How many head of each group you had when the event began: calving records, inventories, a balance sheet, purchase and sale receipts.</li>
+          <li>Any cattle that died earlier in the year from normal causes. They count against the normal death loss first.</li>
+          <li>Injured cattle you sold for less: sell within 30 days after the event ended, to an independent buyer (sale barn,
+            packer, renderer), and keep the receipt showing the price, kind, type and weight.</li>
+          <li>Cattle you sold this year at a good price: a receipt can let FSA use your price instead of its national value,
+            up to 145% of it.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>4. File with your county FSA office</h3>
+        <p id="steps-deadline"></p>
+        <ul>
+          <li>File at the FSA office for the county where the cattle died. FSA wants every head of eligible livestock you
+            had in that county that year accounted for.</li>
+          <li>Form CCC-852, the notice of loss and application for payment, with your records.</li>
+          <li>Income limit: no LIP payment if your average adjusted gross income is over $900,000, unless at least 75% of it
+            comes from farming, ranching or forestry (form CCC-943). There is no cap on the payment itself.</li>
+          <li>Your county office may also need its usual eligibility forms on file; ask what they have for you.</li>
+        </ul>
+        <div class="links">
+          <a class="btnlink" href="https://offices.sc.egov.usda.gov/locator/app" target="_blank" rel="noopener">Find your county FSA office</a>
+          <a class="btnlink alt" href="https://www.fsa.usda.gov/resources/disaster-recovery/livestock-indemnity-program-lip" target="_blank" rel="noopener">FSA's LIP page</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>What LIP covers</h3>
+        <ul>
+          <li><b>Weather</b>: tornadoes, hurricanes and tropical storms, floods, straight-line winds, lightning, hail,
+            blizzards, winter storms of three days or more, wildfires, extreme heat, extreme cold and earthquakes, when
+            the weather was unusual for that time of year.</li>
+          <li><b>Diseases made worse by weather</b>: anthrax, blue-green algae (cyanobacteria) and larkspur poisoning; and
+            insect-spread diseases with no vaccine or management practice to prevent them, such as bluetongue, EHD, Cache
+            Valley virus and Theileria.</li>
+          <li><b>Attacks</b> by animals reintroduced or protected by federal law, including wolves and protected birds.
+            Starting in 2026 these pay 100% of market value. Ask your county office whether an attack on your calves
+            qualifies before you count on it.</li>
+          <li>Cattle that are bred: starting in 2024, LIP also pays for the unborn calf of a bred cow it pays on.</li>
+        </ul>
+        <p class="src">Sources: FSA's 2026 LIP fact sheet; 7 CFR 1416 subpart D as amended July 9, 2026; FSA Handbook 1-LIP.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="panel" id="about" role="tabpanel" aria-labelledby="t-about" hidden>
+    <div>
+      <h2>About this estimate</h2>
+      <p class="sub">How the page works out a payment, where every number comes from, and what it can't know.</p>
+    </div>
+    <div class="about">
+      <div class="card" id="about-how">
+        <h3>How it's figured</h3>
+        <ol>
+          <li><b>Normal death loss</b>: for each group, head on hand when the event began times the normal mortality rate,
+            rounded down. Cattle that died earlier in the year from normal causes use up that allowance first; what's
+            left is taken off the event's losses.</li>
+          <li><b>Payment rate</b>: FSA's market value for the group times 75% (weather or disease) or 100% (protected
+            predator). Your own documented sale price replaces FSA's value when it is higher, up to 145% of it.</li>
+          <li><b>Death payment</b>: head paid on times the payment rate.</li>
+          <li><b>Unborn calves</b>: for each bred cow paid on, 85% of the value of the lightest calf group, times 75% or
+            100%. This page counts the bred cows among the cows paid on first; FSA may count them differently.</li>
+          <li><b>Injured and sold</b>: head sold times the payment rate, less what the sale brought, never below zero.</li>
+          <li>Each line times your share of the cattle.</li>
+        </ol>
+        <p class="src">7 CFR 1416.306 as amended July 9, 2026 (Federal Register doc. 2026-13878); FSA Handbook 1-LIP,
+          paragraphs 4 and 25; FSA Notice LIP-14. The page's arithmetic is tested against FSA's own worked examples.</p>
+      </div>
+      <div class="card" id="about-src">
+        <h3>FSA's market values</h3>
+        <div id="vals"></div>
+        <p class="src" id="vals-src"></p>
+        <p>FSA sets these each year from the year before's market data and announces them between February and April. It
+          also figures end-of-year values; when those come out higher, FSA pays the difference on approved claims.</p>
+      </div>
+      <div class="card">
+        <h3>Normal mortality</h3>
+        <p id="nm-about"></p>
+        <p class="src">FSA Handbook 1-LIP, amendment 9 (posted Sept. 22, 2025), Exhibit 4, National Normal Mortality Rate
+          Table; paragraph 4 A for how state committees set their own.</p>
+      </div>
+      <div class="card">
+        <h3>What this page can't know</h3>
+        <ul>
+          <li>Your state's own normal mortality rates and heat and cold thresholds, set by your state FSA committee.</li>
+          <li>Whether FSA accepts the event, the cause and your records, and how many head it accepts.</li>
+          <li>FSA's end-of-year market values, any reduction for other compensation, and your eligibility for payment
+            (income limit and FSA's usual forms).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Sources</h3>
+        <ul>
+          <li>USDA FSA, <a href="https://www.fsa.usda.gov/resources/disaster-recovery/livestock-indemnity-program-lip" target="_blank" rel="noopener">Livestock Indemnity Program</a>, and its 2026 LIP fact sheet.</li>
+          <li>USDA FSA, <a href="https://www.fsa.usda.gov/Internet/FSA_Notice/lip_14.pdf" target="_blank" rel="noopener">Notice LIP-14</a> (Aug. 3, 2026): 2026 national average market values and unborn livestock payments.</li>
+          <li>USDA FSA, <a href="https://www.fsa.usda.gov/Internet/FSA_File/1-lip_r00_a09.pdf" target="_blank" rel="noopener">Handbook 1-LIP</a>, amendment 9.</li>
+          <li><a href="https://www.federalregister.gov/documents/2026/07/09/2026-13878/supplemental-disaster-assistance-programs-marketing-assistance-loans-and-sugar-provisions" target="_blank" rel="noopener">Final rule</a>, Federal Register, July 9, 2026 (7 CFR 1416 subpart D).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="foot">
+  <div class="wrap">
+    <nav class="tools-strip" id="more-tools" aria-labelledby="tools-h">
+      <h2 id="tools-h">More cattle tools</h2>
+      <ul>
+      <li><a href="../cattleprices/" data-tool="cattleprices"><svg aria-hidden="true" focusable="false" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#5d1725"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M6.5 22.5 L12 16.5 L16.5 19.5 L24.5 10.5"/><circle cx="24.5" cy="10.5" r="2.3" fill="#fff"/><path fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" d="M6.5 26.5 H25.5"/></svg><span><b>Cattle Auction Prices</b><span>Feeder cattle, cull cow and replacement prices at auction this week, by state, class and weight</span></span></a></li>
+      <li><a href="../drought/" data-tool="drought"><svg aria-hidden="true" focusable="false" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#5d1725"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M10 17.5 H22.3 A4.2 4.2 0 0 0 22.6 9.2 A6.4 6.4 0 0 0 10.6 10.6 A3.5 3.5 0 0 0 10 17.5 Z"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M11.5 21.5 L10.3 24.5 M16.5 21.5 L15.3 24.5 M21.5 21.5 L20.3 24.5"/></svg><span><b>Beef Cattle Drought Tracker</b><span>Drought by county, beef cows in drought and LFP payment months</span></span></a></li>
+      <li><a href="../beeftrade/" data-tool="beeftrade"><svg aria-hidden="true" focusable="false" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#5d1725"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M7 11.5 H24 M20 7.5 L24 11.5 L20 15.5"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M25 20.5 H8 M12 16.5 L8 20.5 L12 24.5"/></svg><span><b>U.S. Beef Trade</b><span>Beef imports and exports by country, tariff-rate quotas and cattle trade</span></span></a></li>
+      </ul>
+    </nav>
+    <section class="disc" id="disclaimer" aria-labelledby="disc-h">
+      <h2 id="disc-h">Disclaimer</h2>
+      <p>This page is for education only. It applies the Livestock Indemnity Program's payment rules to the numbers you
+        enter, as we understand them. It is not an eligibility determination, a USDA payment estimate, or financial or
+        legal advice.</p>
+      <p>FSA alone decides LIP eligibility and payments, using its own records, rates and your documents. The dollar
+        figures here are estimates, so confirm everything with your county FSA office.</p>
+      <p>The information is provided as is, without warranty of any kind, and you use it at your own risk. Its authors
+        are not responsible for decisions made with it. This page is not affiliated with or endorsed by USDA.</p>
+    </section>
+    <div class="legal">
+      <a class="home" href="https://extension.msstate.edu" aria-label="Mississippi State University Extension"><svg class="logo logo-light" viewBox="0 0 617 116" width="300" height="56" role="img" aria-label="Mississippi State University Extension" focusable="false"><g><path fill="#5D1725" d="M108.7,41.7c6.3,2.4,12.2,5.4,17.7,9l-4,8.7l4.8,15.5c-3.6-2.4-7.4-4.5-10.7-6.2l0,8.5c-2.5-1.5-5.1-2.8-7.9-4 v3.6l3.8,5.7v7.9H87V67.1c-0.9-0.1-1.8-0.2-2.8-0.3l-9.9,15.6l-9.9-15.6c-0.9,0.1-1.9,0.2-2.8,0.3v23.3H36.3v-7.9l3.8-5.7v-3.6 c-2.8,1.2-5.4,2.6-7.9,4v-8.5c-3.3,1.7-7,3.8-10.7,6.2l4.8-15.5l-4-8.7c5.4-3.6,11.4-6.6,17.7-9v-1.9l-3.8-6v-7.6h23.8l9.2,14.3 c1.7-0.1,3.4-0.2,5-0.2c1.7,0,3.4,0.1,5,0.2l9.2-14.3h23.8v7.6l-3.8,6V41.7z"/><path fill="#FEFEFE" d="M40,44.5c-5.2,2-10,4.4-14.4,7.2l3.5,7.6L26,69.2c2-1.2,4.1-2.3,6.2-3.3V51.2c2.4-1.2,5.9-3,7.9-3.8V44.5z"/><path fill="#FEFEFE" d="M74.4,63.5c13.3,0,27.4,3.4,39.5,9.4V52.8c-12.1-6.3-26.2-9.7-39.5-9.7c-13.3,0-27.4,3.5-39.5,9.7V73 C47,66.9,61.1,63.5,74.4,63.5z"/><path fill="#FEFEFE" d="M108.7,44.5c5.2,2,10,4.4,14.4,7.2l-3.5,7.6l3.1,9.9c-2-1.2-4.1-2.3-6.2-3.3V51.2c-2.4-1.2-5.9-3-7.9-3.8V44.5 z"/><g><path fill="#5D1725" d="M66.9,50.4c-0.8,0.1-1.6,0.2-2.5,0.2v-1.7l-2.7,0.4v9.6c0,0,1.2-0.2,1.2-0.2v2.5c-1.9,0.2-3.8,0.6-5.6,0.9 v-2.5l1.2-0.2c0,0,0-9.6,0-9.6l-2.6,0.5V52c-0.8,0.2-1.6,0.4-2.4,0.6v-4.2c4.4-1.1,8.9-1.9,13.3-2.2V50.4z M51.6,52.5 c-1,0.3-2.1,0.6-3.1,0.9v-1.1l-4.4,1.5v3.3c0,0,4.1-1.5,5.7-2l1.8,1.2v4.7L49,64.3c-1.9,0.6-3.8,1.3-5.7,2 c-0.7-0.5-1.5-0.9-2.2-1.4v-1.8c1-0.4,2-0.8,3-1.2v1.7l0.4-0.2c1.2-0.5,4-1.4,4-1.4v-4.2c0,0-4.1,1.4-5.8,2.1l-1.6-1.1V55l2.4-3.4 c1.9-0.7,3.8-1.4,5.7-2c0.8,0.5,1.6,1,2.3,1.6V52.5z M93.1,52.3c-0.8-0.2-1.6-0.4-2.4-0.5V50L88,49.5v9.6c0,0,1.2,0.2,1.2,0.2v2.5 c-1.9-0.3-3.8-0.6-5.6-0.8v-2.5l1.2,0.1c0,0,0-9.6,0-9.6l-2.7-0.3v1.7c-0.8-0.1-1.6-0.1-2.5-0.2v-4.2c4.5,0.3,9,1,13.4,2V52.3z M99.6,52.4v3.6c0,0,2.8,0.9,4.1,1.4v2.2c-1.2-0.5-4.1-1.4-4.1-1.4V62l4.4,1.5v-1.1c1,0.4,2,0.8,3,1.2v3.6 c-3.8-1.6-7.7-2.9-11.7-4v-2.5l1.2,0.3c0,0,0-9.6,0-9.6c0,0-1.2-0.3-1.2-0.3v-2.5c4,1,7.9,2.4,11.7,4V56c-1-0.4-2-0.8-3-1.2v-0.9 C104,53.9,99.6,52.4,99.6,52.4z M73.2,49c0,0-1.6,4.6-1.6,4.6l3.2,0L73.2,49z M80.5,60.8c-1.8-0.1-3.6-0.2-5.4-0.2V58l1.2,0 c0,0-0.8-2.3-0.8-2.3l-4.8,0.1l-0.8,2.3c0,0,1.2,0,1.2,0v2.5c-1.7,0.1-3.4,0.2-5.1,0.3v-2.5l1.2-0.1c0,0,4.4-12.4,4.4-12.4 c1.1,0,2.3,0,3.5,0l4.2,12.3c0,0,0.9,0.1,1.3,0.1V60.8z"/></g></g><g><path fill="#5D1725" d="M177,61.8h-7.6v4.7h7.3V70h-7.3v5.7h7.6v3.6h-11.7V58.2H177V61.8z"/><path fill="#5D1725" d="M186.7,68.1l-6.3-10h4.9l3.7,6.5l3.9-6.5h4.9l-6.5,10l7.2,11.2h-4.8l-4.7-7.7l-4.9,7.7h-4.9L186.7,68.1z"/><path fill="#5D1725" d="M208.3,79.3h-4.1V61.8h-4.7v-3.6H213v3.6h-4.7V79.3z"/><path fill="#5D1725" d="M227.8,61.8h-7.6v4.7h7.3V70h-7.3v5.7h7.6v3.6h-11.7V58.2h11.7V61.8z"/><path fill="#5D1725" d="M232.3,79.3V57.7h2.8L248,72.4V58.2h4.1v21.5h-2.8L236.4,65v14.3H232.3z"/><path fill="#5D1725" d="M269.9,60.2l-2.1,2.8c-1-1.1-2.2-1.7-3.4-1.7c-0.8,0-1.5,0.2-2.1,0.7c-0.6,0.5-0.9,1-0.9,1.7 c0,0.6,0.2,1,0.7,1.4c0.4,0.4,1.3,0.8,2.5,1.2c2.3,0.8,3.8,1.7,4.6,2.5c1,1,1.5,2.4,1.5,4.1c0,2.1-0.7,3.7-2.1,5 c-1.4,1.3-3.1,1.9-5.3,1.9c-3,0-5.4-1.3-7.3-4l2.7-2.6c1,1.9,2.5,2.8,4.4,2.8c1,0,1.7-0.3,2.4-0.8c0.6-0.6,0.9-1.3,0.9-2.1 c0-0.8-0.3-1.4-0.8-1.8c-0.3-0.2-0.7-0.4-1.2-0.7c-0.6-0.3-1.3-0.6-2.1-0.9c-1.9-0.7-3.3-1.5-4-2.3c-0.8-0.9-1.2-2-1.2-3.4 c0-1.8,0.6-3.2,1.9-4.4c1.2-1.2,2.8-1.8,4.7-1.8C266,57.8,268.1,58.6,269.9,60.2z"/><path fill="#5D1725" d="M278.8,58.2v21.1h-4.1V58.2H278.8z"/><path fill="#5D1725" d="M283.1,68.6c0-3,1.1-5.6,3.3-7.7c2.2-2.1,4.9-3.2,8-3.2c3.2,0,5.8,1.1,8,3.2c2.2,2.1,3.3,4.7,3.3,7.8 c0,3.1-1.1,5.7-3.3,7.9c-2.2,2.1-4.9,3.2-8.1,3.2c-2.8,0-5.3-0.9-7.4-2.7C284.3,74.9,283.1,72.1,283.1,68.6z M287.3,68.6 c0,2.1,0.7,3.8,2.1,5.2c1.4,1.4,3,2.1,5,2.1c1.9,0,3.6-0.7,5-2.1c1.4-1.4,2.1-3.2,2.1-5.2c0-2-0.7-3.7-2.1-5.1 c-1.4-1.4-3-2.1-5-2.1c-1.9,0-3.6,0.7-5,2.1C288,65,287.3,66.7,287.3,68.6z"/><path fill="#5D1725" d="M309.9,79.3V57.7h2.8l12.9,14.7V58.2h4.1v21.5h-2.8L314,65v14.3H309.9z"/></g><g><path fill="#5D1725" d="M178.8,48.6v-8.8l-4.2,7.7l-4.2-7.7v8.8l1.3,0.9v2.6h-6.7v-2.6l1.3-0.9V36.1l-1.3-0.9v-2.6h5.8l3.7,6.9 l3.9-6.9h5.7v2.6l-1.3,0.9v12.5l1.3,0.9v2.6h-6.7v-2.6L178.8,48.6z"/><path fill="#5D1725" d="M194.4,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M210.1,35.5l0.3,0.3V38H206v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L202,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L210.1,35.5z"/><path fill="#5D1725" d="M226,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L226,35.5z"/><path fill="#5D1725" d="M236.5,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M252.2,35.5l0.3,0.3V38H248v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L244,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L252.2,35.5z"/><path fill="#5D1725" d="M268.1,35.5l0.3,0.3V38H264v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L260,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L268.1,35.5z"/><path fill="#5D1725" d="M278.6,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M295.4,35.6l0.3,0.3v6.3l-2.7,2.9l-0.3,0.3h-5.3v3.2l1.5,0.9v2.6h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h11.1 L295.4,35.6z M291.3,37.1l-0.5-0.5h-3.4v4.8h3.4l0.5-0.5V37.1z"/><path fill="#5D1725" d="M312,35.6l0.3,0.3v6.3l-2.7,2.9l-0.3,0.3H304v3.2l1.5,0.9v2.6h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h11.1 L312,35.6z M307.9,37.1l-0.5-0.5H304v4.8h3.4l0.5-0.5V37.1z"/><path fill="#5D1725" d="M321.9,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M348,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L348,35.5z"/><path fill="#5D1725" d="M350.4,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6h-7.1v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#5D1725" d="M381.4,49.6v2.6h-6.8v-2.6l1.3-0.8l-0.8-2.7h-4.5l-0.9,2.7l1.3,0.8v2.6h-6.5v-2.5l1.3-1l4.7-15.3l0.2-0.7h4.5 l4.7,15.9L381.4,49.6z M374,42.4l-1.1-3.9l-1.2,3.9H374z"/><path fill="#5D1725" d="M379.7,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6H384v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#5D1725" d="M397.6,32.6h14.2v6.1h-4.4v-2.1h-4.1v3.7h4.7v3.7h-4.7v4.1h4.1v-1.4h4.4v5.4h-14.2v-2.6l1.4-0.9V36.2l-1.4-0.9 V32.6z"/><path fill="#5D1725" d="M434.1,32.6h6.9v2.7l-1.6,0.9v12.7l-2.7,2.9l-0.3,0.3h-6.9l-3-3.2V36.2l-1.4-0.9v-2.6h6.6v2.5L431,36v11.6 l0.5,0.5h3l0.5-0.5V36l-0.9-0.9V32.6z"/><path fill="#5D1725" d="M450.7,49.5v2.6h-6.6v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h5.9l5.7,10.8v-7.3l-1.2-0.9v-2.6h6.4v2.6l-1.3,0.9v16 h-4.1l-6.2-11.9v8.3L450.7,49.5z"/><path fill="#5D1725" d="M471.2,52.1H464v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M483.3,32.6h7.4v2.7l-2,1L484,52.1h-3.8l-4.9-15.9l-1.8-1v-2.7h7.1v2.6l-1.2,0.8l2.6,8.5l2.6-8.5l-1.3-0.8 V32.6z"/><path fill="#5D1725" d="M492.8,32.6h14.2v6.1h-4.4v-2.1h-4.1v3.7h4.7v3.7h-4.7v4.1h4.1v-1.4h4.4v5.4h-14.2v-2.6l1.4-0.9V36.2l-1.4-0.9 V32.6z"/><path fill="#5D1725" d="M525.7,49.6v2.5h-6.5v-2.6l0.9-0.7l-2-4.5h-2.2v4.3l1,0.9v2.5h-6.7v-2.6l1.3-0.9V36.1l-1.3-0.9v-2.6h11l3,3.2 v5.4l-2,2.1l2.3,5.2L525.7,49.6z M519.8,37.1l-0.6-0.5h-3.3v3.8h3.2l0.6-0.7V37.1z"/><path fill="#5D1725" d="M540.8,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L540.8,35.5z"/><path fill="#5D1725" d="M551.3,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#5D1725" d="M553.5,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6h-7.1v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#5D1725" d="M580.4,32.6h6.4v2.5l-1.3,1.1l-4.3,8.5v3.9l1.4,0.9v2.6h-7.1v-2.6l1.3-0.9v-3.9l-4.3-8.5l-1.2-1.1v-2.5h6.3 v2.5l-0.8,0.7l2.2,4.2l2.1-4.2l-0.8-0.7V32.6z"/></g><g><polyline fill="#5D1725" points="144.4,17.7 144.4,98.6 147.1,98.6 147.1,17.7 "/></g><g><path fill="#5D1725" d="M593.8,45.3v1.1h-2.2v5.7h-1.4v-5.7h-2.2v-1.1H593.8z M601.1,52.1l-0.3-4c0-0.5,0-1.2,0-1.9h-0.1 c-0.2,0.6-0.4,1.4-0.6,2L599,52h-1.4l-1.2-3.9c-0.1-0.5-0.3-1.3-0.5-1.9h-0.1c0,0.6,0,1.3-0.1,1.9l-0.2,4h-1.3l0.5-6.8h2l1.2,3.3 c0.1,0.5,0.3,1,0.5,1.7h0c0.2-0.6,0.3-1.2,0.5-1.7l1.2-3.4h2l0.5,6.8H601.1z"/></g></svg><svg class="logo logo-dark" viewBox="0 0 617 116" width="300" height="56" role="img" aria-label="Mississippi State University Extension" focusable="false"><g><path fill="#FFFFFF" d="M32.8,53.7v20c12-6,26.1-9.4,39.3-9.4s27.3,3.4,39.3,9.4v-20c-12-6.2-26.1-9.7-39.3-9.7 C59,44,44.8,47.5,32.8,53.7z M49.4,53.4c-1,0.3-2,0.6-3.1,0.9v-1.1L42,54.8v3.3c0,0,4-1.5,5.7-2l1.8,1.2V62l-2.5,3.2 c-1.9,0.6-3.8,1.3-5.7,2c-0.7-0.5-1.5-0.9-2.2-1.4V64c1-0.4,2-0.8,3-1.2v1.7l0.4-0.2c1.2-0.5,4-1.4,4-1.4v-4.2c0,0-4.1,1.4-5.8,2 L39,59.7v-3.9l2.4-3.3c1.9-0.7,3.8-1.4,5.7-2c0.8,0.5,1.6,1,2.3,1.5V53.4z M59.6,50.2v9.6c0,0,1.2-0.2,1.2-0.2v2.5 c-1.9,0.2-3.7,0.6-5.6,0.9v-2.5l1.2-0.2c0,0,0-9.6,0-9.6l-2.6,0.5v1.7c-0.8,0.2-1.6,0.4-2.4,0.6v-4.2c4.4-1.1,8.8-1.8,13.3-2.2v4.2 c-0.8,0.1-1.6,0.2-2.5,0.2v-1.7L59.6,50.2z M93,61.6l1.2,0.3c0,0,0-9.6,0-9.6c0,0-1.2-0.3-1.2-0.3v-2.5c3.9,1,7.9,2.4,11.6,4v3.4 c-1-0.4-2-0.8-3-1.2v-0.9c0,0-4.4-1.5-4.4-1.5v3.5c0,0,2.8,0.9,4.1,1.4v2.2c-1.2-0.5-4.1-1.4-4.1-1.4v3.8l4.4,1.5v-1.1 c1,0.4,2,0.8,3,1.2V68c-3.8-1.6-7.7-2.9-11.6-3.9V61.6z M77.5,47c4.5,0.3,8.9,1,13.3,2v4.2c-0.8-0.2-1.6-0.4-2.4-0.5V51l-2.7-0.5 V60c0,0,1.2,0.2,1.2,0.2v2.5c-1.9-0.3-3.7-0.6-5.6-0.8v-2.5l1.2,0.1c0,0,0-9.6,0-9.6L80,49.7v1.7c-0.8-0.1-1.6-0.1-2.5-0.2V47z M77,59c0,0,0.9,0.1,1.3,0.1v2.5c-1.8-0.1-3.6-0.2-5.4-0.2v-2.5l1.2,0c0,0-0.8-2.3-0.8-2.3l-4.8,0.1L67.7,59c0,0,1.2,0,1.2,0v2.5 c-1.7,0.1-3.4,0.2-5.1,0.3v-2.5l1.2-0.1c0,0,4.4-12.3,4.4-12.3c1.1,0,2.3,0,3.5,0L77,59z"/><path fill="#FFFFFF" d="M122.1,60.6l4.3-9.5c-7.1-5.3-17.8-9.6-17.8-9.6l3.7-6V24.9H85.1l-9.3,14.5c-1.2,0-2.4-0.1-3.7-0.1 c-1.2,0-2.4,0-3.7,0.1l-9.3-14.5H31.9v10.5l3.7,6c0,0-10.7,4.3-17.8,9.6l4.3,9.5l-6.3,20.2c0,0,5.5-3.8,12.2-7.8v8.9 c0,0,3.6-2.3,7-4L32,82.6v10.8h29.9V71.1l10.3,16.3l10.3-16.3v22.3h29.9V82.6l-3.2-4.8c3.5,1.7,7,4,7,4v-8.9 c6.7,4,12.2,7.8,12.2,7.8L122.1,60.6z M114.2,69.6l0,8.5c-2.5-1.5-5.1-2.8-7.9-4v3.6l3.7,5.7v7.8H84.8V68c-0.9-0.1-1.8-0.2-2.8-0.3 l-9.8,15.5l-9.8-15.5c-0.9,0.1-1.8,0.2-2.8,0.3v23.2H34.2v-7.8l3.7-5.7V74c-2.7,1.2-5.4,2.5-7.9,4v-8.5c-3.3,1.7-7,3.8-10.6,6.2 l4.8-15.4l-4-8.7c5.4-3.5,11.4-6.6,17.6-9v-1.9l-3.7-6v-7.6H58l9.2,14.3c1.7-0.1,3.3-0.2,5-0.2c1.7,0,3.3,0.1,5,0.2l9.2-14.3h23.7 v7.6l-3.7,6v1.9c6.2,2.4,12.2,5.4,17.6,9l-4,8.7l4.8,15.4C121.2,73.4,117.5,71.2,114.2,69.6z"/><path fill="#FFFFFF" d="M38,45.4c-5.2,2-9.9,4.4-14.4,7.2l3.4,7.5L23.9,70c2-1.2,4.1-2.2,6.2-3.3V52.1c2.4-1.2,5.9-2.9,7.9-3.7V45.4z" /><polygon fill="#FFFFFF" points="69.3,54.4 72.6,54.4 71,49.9 "/><path fill="#FFFFFF" d="M117.3,60.1l3.4-7.5c-4.5-2.8-9.2-5.2-14.4-7.2v2.9c2,0.8,5.5,2.5,7.9,3.7v14.7c2.1,1,4.2,2.1,6.2,3.3 L117.3,60.1z"/></g><g><path fill="#FFFFFF" d="M177,61.8h-7.6v4.7h7.3V70h-7.3v5.7h7.6v3.6h-11.7V58.2H177V61.8z"/><path fill="#FFFFFF" d="M186.7,68.1l-6.3-10h4.9l3.7,6.5l3.9-6.5h4.9l-6.5,10l7.2,11.2h-4.8l-4.7-7.7l-4.9,7.7h-4.9L186.7,68.1z"/><path fill="#FFFFFF" d="M208.3,79.3h-4.1V61.8h-4.7v-3.6H213v3.6h-4.7V79.3z"/><path fill="#FFFFFF" d="M227.8,61.8h-7.6v4.7h7.3V70h-7.3v5.7h7.6v3.6h-11.7V58.2h11.7V61.8z"/><path fill="#FFFFFF" d="M232.3,79.3V57.7h2.8L248,72.4V58.2h4.1v21.5h-2.8L236.4,65v14.3H232.3z"/><path fill="#FFFFFF" d="M269.9,60.2l-2.1,2.8c-1-1.1-2.2-1.7-3.4-1.7c-0.8,0-1.5,0.2-2.1,0.7c-0.6,0.5-0.9,1-0.9,1.7 c0,0.6,0.2,1,0.7,1.4c0.4,0.4,1.3,0.8,2.5,1.2c2.3,0.8,3.8,1.7,4.6,2.5c1,1,1.5,2.4,1.5,4.1c0,2.1-0.7,3.7-2.1,5 c-1.4,1.3-3.1,1.9-5.3,1.9c-3,0-5.4-1.3-7.3-4l2.7-2.6c1,1.9,2.5,2.8,4.4,2.8c1,0,1.7-0.3,2.4-0.8c0.6-0.6,0.9-1.3,0.9-2.1 c0-0.8-0.3-1.4-0.8-1.8c-0.3-0.2-0.7-0.4-1.2-0.7c-0.6-0.3-1.3-0.6-2.1-0.9c-1.9-0.7-3.3-1.5-4-2.3c-0.8-0.9-1.2-2-1.2-3.4 c0-1.8,0.6-3.2,1.9-4.4c1.2-1.2,2.8-1.8,4.7-1.8C266,57.8,268.1,58.6,269.9,60.2z"/><path fill="#FFFFFF" d="M278.8,58.2v21.1h-4.1V58.2H278.8z"/><path fill="#FFFFFF" d="M283.1,68.6c0-3,1.1-5.6,3.3-7.7c2.2-2.1,4.9-3.2,8-3.2c3.2,0,5.8,1.1,8,3.2c2.2,2.1,3.3,4.7,3.3,7.8 c0,3.1-1.1,5.7-3.3,7.9c-2.2,2.1-4.9,3.2-8.1,3.2c-2.8,0-5.3-0.9-7.4-2.7C284.3,74.9,283.1,72.1,283.1,68.6z M287.3,68.6 c0,2.1,0.7,3.8,2.1,5.2c1.4,1.4,3,2.1,5,2.1c1.9,0,3.6-0.7,5-2.1c1.4-1.4,2.1-3.2,2.1-5.2c0-2-0.7-3.7-2.1-5.1 c-1.4-1.4-3-2.1-5-2.1c-1.9,0-3.6,0.7-5,2.1C288,65,287.3,66.7,287.3,68.6z"/><path fill="#FFFFFF" d="M309.9,79.3V57.7h2.8l12.9,14.7V58.2h4.1v21.5h-2.8L314,65v14.3H309.9z"/></g><g><path fill="#FFFFFF" d="M178.8,48.6v-8.8l-4.2,7.7l-4.2-7.7v8.8l1.3,0.9v2.6h-6.7v-2.6l1.3-0.9V36.1l-1.3-0.9v-2.6h5.8l3.7,6.9 l3.9-6.9h5.7v2.6l-1.3,0.9v12.5l1.3,0.9v2.6h-6.7v-2.6L178.8,48.6z"/><path fill="#FFFFFF" d="M194.4,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M210.1,35.5l0.3,0.3V38H206v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L202,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L210.1,35.5z"/><path fill="#FFFFFF" d="M226,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L226,35.5z"/><path fill="#FFFFFF" d="M236.5,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M252.2,35.5l0.3,0.3V38H248v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L244,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L252.2,35.5z"/><path fill="#FFFFFF" d="M268.1,35.5l0.3,0.3V38H264v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8L260,40h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L268.1,35.5z"/><path fill="#FFFFFF" d="M278.6,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M295.4,35.6l0.3,0.3v6.3l-2.7,2.9l-0.3,0.3h-5.3v3.2l1.5,0.9v2.6h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h11.1 L295.4,35.6z M291.3,37.1l-0.5-0.5h-3.4v4.8h3.4l0.5-0.5V37.1z"/><path fill="#FFFFFF" d="M312,35.6l0.3,0.3v6.3l-2.7,2.9l-0.3,0.3H304v3.2l1.5,0.9v2.6h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h11.1 L312,35.6z M307.9,37.1l-0.5-0.5H304v4.8h3.4l0.5-0.5V37.1z"/><path fill="#FFFFFF" d="M321.9,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M348,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L348,35.5z"/><path fill="#FFFFFF" d="M350.4,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6h-7.1v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#FFFFFF" d="M381.4,49.6v2.6h-6.8v-2.6l1.3-0.8l-0.8-2.7h-4.5l-0.9,2.7l1.3,0.8v2.6h-6.5v-2.5l1.3-1l4.7-15.3l0.2-0.7h4.5 l4.7,15.9L381.4,49.6z M374,42.4l-1.1-3.9l-1.2,3.9H374z"/><path fill="#FFFFFF" d="M379.7,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6H384v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#FFFFFF" d="M397.6,32.6h14.2v6.1h-4.4v-2.1h-4.1v3.7h4.7v3.7h-4.7v4.1h4.1v-1.4h4.4v5.4h-14.2v-2.6l1.4-0.9V36.2l-1.4-0.9 V32.6z"/><path fill="#FFFFFF" d="M434.1,32.6h6.9v2.7l-1.6,0.9v12.7l-2.7,2.9l-0.3,0.3h-6.9l-3-3.2V36.2l-1.4-0.9v-2.6h6.6v2.5L431,36v11.6 l0.5,0.5h3l0.5-0.5V36l-0.9-0.9V32.6z"/><path fill="#FFFFFF" d="M450.7,49.5v2.6h-6.6v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h5.9l5.7,10.8v-7.3l-1.2-0.9v-2.6h6.4v2.6l-1.3,0.9v16 h-4.1l-6.2-11.9v8.3L450.7,49.5z"/><path fill="#FFFFFF" d="M471.2,52.1H464v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M483.3,32.6h7.4v2.7l-2,1L484,52.1h-3.8l-4.9-15.9l-1.8-1v-2.7h7.1v2.6l-1.2,0.8l2.6,8.5l2.6-8.5l-1.3-0.8 V32.6z"/><path fill="#FFFFFF" d="M492.8,32.6h14.2v6.1h-4.4v-2.1h-4.1v3.7h4.7v3.7h-4.7v4.1h4.1v-1.4h4.4v5.4h-14.2v-2.6l1.4-0.9V36.2l-1.4-0.9 V32.6z"/><path fill="#FFFFFF" d="M525.7,49.6v2.5h-6.5v-2.6l0.9-0.7l-2-4.5h-2.2v4.3l1,0.9v2.5h-6.7v-2.6l1.3-0.9V36.1l-1.3-0.9v-2.6h11l3,3.2 v5.4l-2,2.1l2.3,5.2L525.7,49.6z M519.8,37.1l-0.6-0.5h-3.3v3.8h3.2l0.6-0.7V37.1z"/><path fill="#FFFFFF" d="M540.8,35.5l0.3,0.3V38h-4.4v-0.9l-0.5-0.5h-3l-0.5,0.5v2.8l0.1,0.1h6.1l2.1,2.2l0.3,0.3v6.3l-3,3.3h-6.9 l-2.7-3.1l-0.2-0.3v-2.7h4.4v1.5l0.6,0.7h2.9l0.6-0.7v-3.8l-0.1-0.1h-6.2l-2.2-2.6v-5.3l2.6-2.9l0.3-0.3h7L540.8,35.5z"/><path fill="#FFFFFF" d="M551.3,52.1h-7.2v-2.6l1.4-0.9V36.2l-1.4-0.9v-2.6h7.2v2.6l-1.4,0.9v12.5l1.4,0.9V52.1z"/><path fill="#FFFFFF" d="M553.5,32.6h15.7v6.2h-3.6v-2.1h-2v12l1.4,0.9v2.6h-7.1v-2.6l1.4-0.9v-12h-2v2.1h-3.6V32.6z"/><path fill="#FFFFFF" d="M580.4,32.6h6.4v2.5l-1.3,1.1l-4.3,8.5v3.9l1.4,0.9v2.6h-7.1v-2.6l1.3-0.9v-3.9l-4.3-8.5l-1.2-1.1v-2.5h6.3 v2.5l-0.8,0.7l2.2,4.2l2.1-4.2l-0.8-0.7V32.6z"/></g><g><polyline fill="#FFFFFF" points="144.4,17.7 144.4,98.6 147.1,98.6 147.1,17.7 "/></g><g><path fill="#FFFFFF" d="M593.8,45.3v1.1h-2.2v5.7h-1.4v-5.7h-2.2v-1.1H593.8z M601.1,52.1l-0.3-4c0-0.5,0-1.2,0-1.9h-0.1 c-0.2,0.6-0.4,1.4-0.6,2L599,52h-1.4l-1.2-3.9c-0.1-0.5-0.3-1.3-0.5-1.9h-0.1c0,0.6,0,1.3-0.1,1.9l-0.2,4h-1.3l0.5-6.8h2l1.2,3.3 c0.1,0.5,0.3,1,0.5,1.7h0c0.2-0.6,0.3-1.2,0.5-1.7l1.2-3.4h2l0.5,6.8H601.1z"/></g></svg></a>
+      <p class="note">Josh Maples, Department of Agricultural Economics, MSU Extension.
+        <a href="mailto:josh.maples@msstate.edu">josh.maples@msstate.edu</a>. <span id="foot-gen"></span></p>
+      <p class="note">Mississippi State University is an equal opportunity institution. Discrimination is prohibited in
+        university employment, programs, or activities based on race, color, ethnicity, sex, pregnancy, religion, national
+        origin, disability, age, sexual orientation, genetic information, status as a U.S. veteran, or any other status to
+        the extent protected by applicable law. Questions about equal opportunity programs or compliance should be directed
+        to the <a href="https://www.civilrights.msstate.edu/">Office of Civil Rights Compliance</a>, 231 Famous Maroon Band
+        Street, P.O. 6044, Mississippi State, MS 39762.</p>
+      <p class="note">Visits to this page are counted with GoatCounter, without cookies or any personal data.</p>
+      <p class="note">Copyright <span id="foot-year"></span> by Mississippi State University. All rights reserved.
+        <a href="https://www.msstate.edu">www.msstate.edu</a></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* LIP payment estimate (7 CFR 1416.306 as amended 7/9/2026; FSA Handbook 1-LIP par. 4 A, 25; FSA Notice LIP-14).
+   One file used by the page (the export inlines it) and by the tests (node --test tests/). Money is worked in whole
+   cents so a rate like $1,931.14 x 75% = $1,448.355 rounds the way a person would ($1,448.36), not by float luck.
+
+   estimate(input, rates) -> rows and totals.
+   input = { year: "2026", cause: "weather" | "disease" | "attack", share: 100, state: "MS" | "",
+             rows: { <category id>: { onHand, normalLost, died, bred, nm, ownPrice, endValue, soldHead, soldReceived } } }
+     onHand        head of that category on hand when the event began (FSA's "beginning inventory")
+     normalLost    head of that category already lost this year to normal causes (counts against the
+                   normal mortality allowance first: 1-LIP par. 4 A, 25 A example 1)
+     died          head that died because of the event
+     bred          adult females among `died` that were bred (unborn payment)
+     nm            normal mortality rate in percent (the page fills the national or state rate; editable)
+     ownPrice      the producer's own sale price per head this year, from a receipt (optional)
+     soldHead      head injured by the event and sold at a lower price (not for disease: 1-LIP par. 22 D)
+     soldReceived  total dollars received for those head */
+(function (root) {
+  "use strict";
+  const cents = d => Math.round(Number(d || 0) * 100);
+  const pct = f => Math.round(Number(f) * 100);                 // 0.75 -> 75
+  const whole = v => Math.max(0, Math.floor(Number(v) || 0));   // head counts: whole, never negative
+  const half = (num, den) => Math.floor(num / den + 0.5 + 1e-9); // round half up, integer inputs
+
+  function factorFor(cause, F) { return cause === "attack" ? F.attack : cause === "disease" ? F.disease : F.weather; }
+
+  function estimate(input, rates) {
+    const Y = rates.years[input.year];
+    if (!Y) throw new Error(`no LIP values for ${input.year}`);
+    const F = rates.factors, cause = input.cause || "weather";
+    const fPct = pct(factorFor(cause, F));
+    const share = Math.min(100, Math.max(0, Number(input.share ?? 100)));
+    const lowest = Y.categories.find(c => c.lowest) || Y.categories.reduce((a, c) => (c.value < a.value ? c : a));
+    // unborn: 85% of the payment rate for the lowest weight class x birthing factor (1 for cattle) x 75% or 100%
+    const unbornRate = half(cents(lowest.value) * pct(F.unborn) * (F.birthing_cattle || 1) * fPct, 10000);
+    const out = { year: input.year, cause, factor: fPct / 100, share, unbornRate: unbornRate / 100, rows: [], notes: [] };
+    let tDeath = 0, tUnborn = 0, tInj = 0;
+    for (const c of Y.categories) {
+      const r = (input.rows || {})[c.id] || {};
+      const onHand = whole(r.onHand), normalLost = whole(r.normalLost);
+      const died = Math.min(whole(r.died), onHand || whole(r.died));   // can't lose more than were on hand
+      const nm = Number.isFinite(+r.nm) && r.nm !== "" && r.nm != null ? Math.max(0, +r.nm) : null;
+      // market value: the higher national value (start of year, or end of year once FSA posts it), or the
+      // producer's own documented price when higher, capped at 145% of that national value (1416.306(b))
+      const natC = Math.max(cents(c.value), cents(r.endValue || c.end_value || 0));
+      const ownC = cents(r.ownPrice), capC = half(natC * pct(F.alt_cap), 100);
+      const usedC = ownC > natC ? Math.min(ownC, capC) : natC;
+      const rateC = half(usedC * fPct, 100);
+      // normal mortality allowance: head on hand x rate, rounded down; this year's normal losses use it up first
+      const threshold = nm == null ? 0 : Math.floor(onHand * nm / 100 + 1e-9);
+      const left = Math.max(0, threshold - normalLost);
+      const eligible = Math.max(0, died - left);
+      const deathC = eligible * rateC;
+      // unborn: bred adult females among the eligible deaths. FSA applies normal mortality to the adult females
+      // first and adds none to the unborn (LIP-14 par. 7 C). Which of the dead were bred isn't settled by the
+      // rule; this counts bred cows first (min of bred and eligible). Ask FSA.
+      const bred = c.adult_female ? Math.min(whole(r.bred), died) : 0;
+      const bredEligible = Math.min(bred, eligible);
+      const unbornC = bredEligible * unbornRate;
+      // injured and sold at a lower price: payment rate x head, less what the sale brought (never below zero);
+      // only for weather or an attack (eligible diseases cover deaths only)
+      const soldHead = cause === "disease" ? 0 : whole(r.soldHead);
+      const recvC = cents(r.soldReceived);
+      const injC = soldHead ? Math.max(0, soldHead * rateC - recvC) : 0;
+      const sh = x => half(x * Math.round(share * 100), 10000);
+      const row = {
+        id: c.id, label: c.label, short: c.short, value: c.value, valueUsed: usedC / 100,
+        own: ownC > 0, ownUsed: ownC > natC, ownCapped: ownC > capC, cap: capC / 100,
+        rate: rateC / 100, nm, onHand, normalLost, died, threshold, left, eligible,
+        bred, bredEligible, soldHead, soldReceived: recvC / 100,
+        death: sh(deathC) / 100, unborn: sh(unbornC) / 100, injured: sh(injC) / 100
+      };
+      row.total = Math.round((row.death + row.unborn + row.injured) * 100) / 100;
+      tDeath += sh(deathC); tUnborn += sh(unbornC); tInj += sh(injC);
+      out.rows.push(row);
+    }
+    out.death = tDeath / 100; out.unborn = tUnborn / 100; out.injured = tInj / 100;
+    out.total = (tDeath + tUnborn + tInj) / 100;
+    if (cause === "disease" && Object.values(input.rows || {}).some(r => whole(r.soldHead)))
+      out.notes.push("Injured animals sold at a lower price are covered for weather and protected-predator attacks only, not disease.");
+    return out;
+  }
+
+  // Final date to file the notice of loss and the application: March 1 after the loss year, or the Monday after
+  // when March 1 falls on a weekend (2026 LIP fact sheet). Returns "YYYY-MM-DD".
+  function deadline(year) {
+    const d = new Date(Date.UTC(Number(year) + 1, 2, 1)), wd = d.getUTCDay();
+    if (wd === 6) d.setUTCDate(3); else if (wd === 0) d.setUTCDate(2);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const api = { estimate, deadline };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.LIPCalc = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+</script>
+<script>
+(() => {
+  "use strict";
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const MON = ["Jan.", "Feb.", "March", "April", "May", "June", "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."];
+  const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const fmtDate = (iso, wd) => { const [y, m, d] = iso.split("-").map(Number), t = new Date(Date.UTC(y, m - 1, d));
+    return `${wd ? DAY[t.getUTCDay()] + ", " : ""}${MON[m - 1]} ${d}, ${y}`; };
+  const usd = (v, c) => "$" + Number(v).toLocaleString("en-US", { minimumFractionDigits: c ? 2 : 0, maximumFractionDigits: c ? 2 : 0 });
+  const int = v => Number(v).toLocaleString("en-US");
+  const STATES = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado",
+    CT: "Connecticut", DE: "Delaware", DC: "District of Columbia", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
+    IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+    MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska",
+    NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina",
+    ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island",
+    SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia",
+    WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", PR: "Puerto Rico" };
+  const CAUSE_NOTE = {
+    weather: "Extreme or unusual weather for the time of year: tornado, hurricane, flood, straight-line wind, lightning, hail, blizzard or winter storm, wildfire, extreme heat or cold.",
+    disease: "Anthrax, blue-green algae or larkspur poisoning made worse by weather, or an insect-spread disease such as bluetongue, EHD or Theileria with no vaccine to prevent it.",
+    attack: "An attack by an animal protected by federal law, including protected birds. Ask your county office whether yours qualifies."
+  };
+  // per-viewer convenience: the form's numbers stay in this browser (never sent anywhere)
+  const store = {
+    get(k) { try { return localStorage.getItem("lip." + k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem("lip." + k, v); } catch (e) { /* private window */ } },
+    del(k) { try { localStorage.removeItem("lip." + k); } catch (e) { /* private window */ } }
+  };
+  const TABS = ["estimate", "steps", "about"];
+  const S = { tab: "estimate", st: "", year: "", cause: "weather" };
+  let R = null;
+
+  const FIELDS = [   // per category: [key, label, cows only]
+    ["onHand", "On hand when it began"], ["died", "Died in the event"], ["normalLost", "Lost earlier this year to normal causes"],
+    ["bred", "Of those that died, bred", true], ["nm", "Normal mortality, %"]
+  ];
+  const Y = () => R.years[S.year];
+  const nmFor = id => { const st = R.normal_mortality.states[S.st]; return st && st[id] != null ? st[id] : R.normal_mortality.national[id]; };
+
+  function buildForm() {
+    const cats = Y().categories;
+    $("#cats").innerHTML = cats.map(c => `<fieldset class="cat" data-c="${c.id}"><legend>${esc(c.label)}</legend>` +
+      FIELDS.filter(f => !f[2] || c.adult_female).map(([k, l]) => `<div class="pair${k === "nm" ? " nm" : ""}"><label for="${c.id}-${k}">${esc(l)}${k === "nm" ? `<small id="${c.id}-nm-s"></small>` : ""}</label>` +
+        `<input id="${c.id}-${k}" data-k="${k}" type="number" inputmode="${k === "nm" ? "decimal" : "numeric"}" min="0" step="${k === "nm" ? "any" : "1"}"></div>`).join("") + `</fieldset>`).join("");
+    $("#sold").innerHTML = cats.map(c => `<fieldset class="cat" data-c="${c.id}"><legend>${esc(c.label)}</legend>` +
+      `<div class="pair"><label for="${c.id}-soldHead">Head sold</label><input id="${c.id}-soldHead" data-k="soldHead" type="number" inputmode="numeric" min="0" step="1"></div>` +
+      `<div class="pair"><label for="${c.id}-soldReceived">Total received, $</label><input id="${c.id}-soldReceived" data-k="soldReceived" type="number" inputmode="decimal" min="0" step="any"></div></fieldset>`).join("");
+    $("#own").innerHTML = cats.map(c => `<fieldset class="cat" data-c="${c.id}"><legend>${esc(c.label)}</legend>` +
+      `<div class="pair"><label for="${c.id}-ownPrice">Your price per head, $<small>FSA's value: ${usd(c.value, true)}</small></label><input id="${c.id}-ownPrice" data-k="ownPrice" type="number" inputmode="decimal" min="0" step="any"></div></fieldset>`).join("");
+    // restore what this browser had typed
+    let saved = {}; try { saved = JSON.parse(store.get("form")) || {}; } catch (e) { saved = {}; }
+    document.querySelectorAll("#form input[data-k]").forEach(i => {
+      const v = saved[i.id]; if (v != null && v !== "") i.value = v;
+      i.addEventListener("input", () => { if (i.dataset.k === "nm") i.dataset.own = "1"; save(); draw(); });
+    });
+    if (saved.share != null) $("#share").value = saved.share;
+    Object.keys(saved).forEach(k => { if (/-nm$/.test(k) && saved[k] !== "") { const i = document.getElementById(k); if (i) i.dataset.own = "1"; } });
+    fillNM();
+    if (cats.some(c => saved[c.id + "-soldHead"])) $("#sold-d").open = true;
+    if (cats.some(c => saved[c.id + "-ownPrice"])) $("#own-d").open = true;
+  }
+  function fillNM() {          // the national (or state) rate, unless the producer typed their own
+    const st = R.normal_mortality.states[S.st];
+    Y().categories.forEach(c => {
+      const i = document.getElementById(c.id + "-nm"); if (!i) return;
+      if (!i.dataset.own) i.value = nmFor(c.id);
+      document.getElementById(c.id + "-nm-s").textContent = st && st[c.id] != null ? `${STATES[S.st]}: ${st[c.id]}%` : `National: ${R.normal_mortality.national[c.id]}%`;
+    });
+    $("#nm-src").textContent = st ? `${STATES[S.st]}'s FSA rate` : "FSA's national rate";
+  }
+  function save() {
+    const o = { share: $("#share").value };
+    document.querySelectorAll("#form input[data-k]").forEach(i => { if (i.value !== "" && !(i.dataset.k === "nm" && !i.dataset.own)) o[i.id] = i.value; });
+    store.set("form", JSON.stringify(o));
+  }
+  function readInput() {
+    const rows = {};
+    document.querySelectorAll("#form input[data-k]").forEach(i => {
+      const c = i.closest("[data-c]").dataset.c; (rows[c] = rows[c] || {})[i.dataset.k] = i.value === "" ? (i.dataset.k === "nm" ? "" : 0) : Number(i.value);
+    });
+    return { year: S.year, cause: S.cause, share: $("#share").value === "" ? 100 : Number($("#share").value), state: S.st, rows };
+  }
+
+  function draw() {
+    const out = LIPCalc.estimate(readInput(), R);
+    const lost = out.rows.filter(r => r.died || r.soldHead);
+    $("#total").textContent = usd(Math.round(out.total));
+    $("#mini-t").textContent = usd(Math.round(out.total)); S.anyLost = lost.length > 0; showMini();
+    if (!lost.length) {
+      $("#total-s").textContent = "Enter the cattle you lost.";
+      $("#bd").innerHTML = "";
+    } else {
+      const factor = out.factor === 1 ? "100%" : "75%";
+      $("#total-s").textContent = `${S.year} losses, paid at ${factor} of market value` + (out.share < 100 ? `, times your ${out.share}% share.` : ".");
+      const rows = lost.map(r => `<tr><td>${esc(r.short)}</td><td class="n">${int(r.died)}</td><td class="n">${int(r.died - r.eligible)}</td><td class="n">${int(r.eligible)}</td><td class="n">${usd(r.death)}</td></tr>`).join("");
+      const extra = [];
+      if (out.unborn) extra.push(`<tr><td colspan="4">Unborn calves (${int(out.rows.reduce((a, r) => a + r.bredEligible, 0))} bred cows at ${usd(out.unbornRate, true)})</td><td class="n">${usd(out.unborn)}</td></tr>`);
+      if (out.injured || out.rows.some(r => r.soldHead)) extra.push(`<tr><td colspan="4">Injured and sold at a lower price</td><td class="n">${usd(out.injured)}</td></tr>`);
+      $("#bd").innerHTML = `<table class="bd"><caption class="sr-only">Estimate by group</caption><thead><tr><th scope="col">Group</th><th class="n" scope="col">Died</th>` +
+        `<th class="n" scope="col"><abbr title="Normal death loss allowance">Normal</abbr></th><th class="n" scope="col">Paid on</th><th class="n" scope="col">Payment</th></tr></thead>` +
+        `<tbody>${rows}${extra.join("")}</tbody><tfoot><tr><td colspan="4">Total</td><td class="n">${usd(out.total)}</td></tr></tfoot></table>` +
+        `<ul class="how">${how(out).map(t => `<li>${t}</li>`).join("")}</ul>`;
+    }
+    const dl = LIPCalc.deadline(S.year);
+    $("#deadline").innerHTML = `File with your county FSA office by <b>${fmtDate(dl, true)}</b> for ${S.year} losses.`;
+    const notes = [...out.notes];
+    $("#cause-note").textContent = CAUSE_NOTE[S.cause] + (notes.length ? " " + notes.join(" ") : "");
+  }
+  // the phone's running-total bar: only while the form is on screen, not over the masthead or the breakdown itself
+  const seen = { mast: true, result: false };
+  function showMini() { $("#mini").hidden = !S.anyLost || seen.mast || seen.result || S.tab !== "estimate"; }
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(es => { es.forEach(e => { seen[e.target.id === "result" ? "result" : "mast"] = e.isIntersecting; }); showMini(); });
+    io.observe(document.querySelector(".mast")); io.observe(document.getElementById("result"));
+  } else { seen.mast = false; }
+  function how(out) {
+    const lines = [];
+    out.rows.filter(r => r.died).forEach(r => {
+      const nm = r.nm == null ? 0 : r.nm;
+      lines.push(`${esc(r.short)}: ${int(r.onHand)} on hand x ${nm}% = ${int(r.threshold)} normal` +
+        (r.normalLost ? `, ${int(Math.min(r.normalLost, r.threshold))} already used by earlier losses` : "") +
+        `; ${int(r.died)} died, so ${int(r.eligible)} paid at ${usd(r.rate, true)}` +
+        (r.ownUsed ? ` (your price${r.ownCapped ? ", capped at 145% of FSA's value" : ""})` : "") + `.`);
+    });
+    if (!out.rows.some(r => r.onHand) && out.rows.some(r => r.died))
+      lines.push("Enter the head on hand when the event began, so the normal death loss can be taken off.");
+    return lines;
+  }
+
+  function drawAbout() {
+    const y = Y(), f = R.factors;
+    $("#vals").innerHTML = `<div style="overflow-x:auto" tabindex="0" role="region" aria-label="${S.year} market values and payment rates"><table class="vals"><caption class="sr-only">${S.year} market values and payment rates per head</caption><thead><tr><th scope="col">Beef cattle</th><th class="n" scope="col">Market value</th>` +
+      `<th class="n" scope="col">Weather or disease (75%)</th><th class="n" scope="col">Protected predator (100%)</th></tr></thead><tbody>` +
+      y.categories.map(c => `<tr><td>${esc(c.label)}</td><td class="n">${usd(c.value, true)}</td><td class="n">${usd(Math.round(c.value * 100 * f.weather + 1e-6) / 100, true)}</td><td class="n">${usd(c.value, true)}</td></tr>`).join("") +
+      `<tr><td>Unborn calf, per bred cow paid on</td><td class="n"></td><td class="n">${usd(y.unborn_check.weather, true)}</td><td class="n">${usd(y.unborn_check.attack, true)}</td></tr></tbody></table></div>`;
+    $("#vals-src").textContent = `${S.year} national average market values per head at the start of the year, from FSA Notice LIP-14 (${fmtDate(y.values_date)}). Payment rates are 75% or 100% of them.`;
+    const nat = R.normal_mortality.national, st = R.normal_mortality.states[S.st];
+    $("#nm-about").textContent = `FSA's national rates for beef cattle: cows and bulls ${nat.cow}%, calves and yearlings ${nat.na400}% in each weight group. ` +
+      `Each state's FSA committee sets its own rates, with advice from livestock groups and Extension, and uses the national table only when it has no data of its own. ` +
+      (st ? `This page uses ${STATES[S.st]}'s rates.` : (S.st ? `This page doesn't have ${STATES[S.st]}'s rates yet, so it fills in the national ones; ` : "This page fills in the national rates; ") +
+        "your county FSA office can tell you your state's. You can change the rate on the Estimate tab.");
+    $("#steps-deadline").innerHTML = `The notice of loss and the application are both due by March 1 after the year of the loss (the Monday after, when March 1 falls on a weekend): <b>${fmtDate(LIPCalc.deadline(S.year), true)}</b> for ${S.year} losses. File as soon as you can.`;
+  }
+
+  /* ---------- tabs, state and the address (Data_Forecasts/ADDRESS_STANDARD.md): ?state=ms#estimate ---------- */
+  function setTab(t, scroll) {
+    S.tab = t;
+    document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+    TABS.forEach(id => { $("#" + id).hidden = id !== t; });
+    if (typeof showMini === "function") showMini();
+    writeAddr();
+    if (scroll) window.scrollTo({ top: $("main").getBoundingClientRect().top + window.scrollY - $(".tabs").offsetHeight, behavior: "smooth" });
+  }
+  const query = () => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(""); } };
+  function writeAddr() {
+    const q = query(); q.delete("state");
+    if (S.st) q.set("state", S.st.toLowerCase());
+    const qs = q.toString(), url = `${location.pathname}${qs ? "?" + qs : ""}#${S.tab}`;
+    try { if (location.pathname + location.search + location.hash !== url) history.replaceState(null, "", url); } catch (e) { /* sandboxed frame */ }
+  }
+  function readAddr() {
+    const m = location.hash.match(/^#(estimate|steps|about)$/), st = (query().get("state") || "").trim().toUpperCase();
+    return { tab: m ? m[1] : null, st: STATES[st] ? st : "" };
+  }
+  function pickState(st) {
+    S.st = st; $("#state").value = st; store.set("st", st);
+    fillNM(); draw(); drawAbout(); writeAddr();
+  }
+
+  fetch("data/rates.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(rates => {
+    R = rates;
+    const years = Object.keys(R.years).sort();
+    S.year = years[years.length - 1];
+    $("#year").innerHTML = years.slice().reverse().map(y => `<option value="${y}">${y}</option>`).join("");
+    const y = Y();
+    $("#asof").textContent = `Uses FSA's ${S.year} market values for beef cattle (Notice LIP-14, ${fmtDate(y.values_date)}).`;
+    const thisYear = new Date().getFullYear();
+    if (thisYear > Number(S.year)) {   // FSA posts each year's values between February and April
+      const w = $("#stale"); w.hidden = false;
+      w.textContent = `FSA hasn't posted ${thisYear} values on this page yet; estimates use ${S.year} values.`;
+    }
+    $("#state").insertAdjacentHTML("beforeend", Object.entries(STATES).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""));
+    const a = readAddr();
+    S.st = a.st || (STATES[store.get("st")] ? store.get("st") : "");
+    $("#state").value = S.st;
+    buildForm();
+    const ver = document.querySelector('meta[name="version"]'), gen = document.querySelector('meta[name="generated"]');
+    const built = gen ? new Date(gen.content) : null, ct = o => (built || new Date()).toLocaleString("en-US", { timeZone: "America/Chicago", ...o });
+    $("#foot-gen").textContent = `${S.year} values from FSA Notice LIP-14.` + (ver ? ` Page version ${ver.content}` : " Page") +
+      (built ? `, built ${fmtDate(built.toLocaleDateString("en-CA", { timeZone: "America/Chicago" }))}.` : ".");
+    $("#foot-year").textContent = ct({ year: "numeric" });
+    $("#state").onchange = e => pickState(e.target.value);
+    $("#year").onchange = e => { S.year = e.target.value; buildForm(); draw(); drawAbout(); };
+    $("#share").addEventListener("input", () => { save(); draw(); });
+    document.querySelectorAll("#cause button").forEach(b => b.onclick = () => {
+      S.cause = b.dataset.v; store.set("cause", S.cause);
+      document.querySelectorAll("#cause button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      draw();
+    });
+    const sc = store.get("cause"); if (sc && CAUSE_NOTE[sc]) document.querySelector(`#cause button[data-v="${sc}"]`).click();
+    $("#print").onclick = () => window.print();
+    $("#clear").onclick = () => { store.del("form"); document.querySelectorAll("#form input[data-k]").forEach(i => { i.value = ""; delete i.dataset.own; }); $("#share").value = 100; fillNM(); draw(); };
+    document.querySelectorAll(".tab").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+    $("#mini").onclick = ev => { ev.preventDefault(); $("#result").scrollIntoView({ behavior: "smooth", block: "start" }); };
+    document.querySelectorAll("a[data-goto]").forEach(a => a.onclick = ev => { ev.preventDefault();
+      setTab("about"); $("#" + a.dataset.goto).scrollIntoView({ block: "start" }); });
+    // arrow keys move between tabs (the tablist pattern)
+    $("#tablist").addEventListener("keydown", ev => {
+      const i = TABS.indexOf(S.tab), j = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: TABS.length - 1 }[ev.key];
+      if (j == null) return; ev.preventDefault(); const t = TABS[(j + TABS.length) % TABS.length]; setTab(t); $("#t-" + t).focus();
+    });
+    setTab(a.tab || "estimate");
+    draw(); drawAbout();
+    window.addEventListener("hashchange", () => { const h = readAddr(); if (h.tab) setTab(h.tab); });
+  }).catch(err => {
+    $("#asof").textContent = "FSA's market values didn't load. Try again in a minute.";
+    console.error(err);
+  });
+})();
+
+// Links between the MSU Extension tools (11/2026; ADDRESS_STANDARD.md). "Share this view" opens the phone's
+// share sheet where there is one, otherwise copies the address, which always holds the view on screen.
+// Links to the other tools carry this page's state (?state=) to the tools that use one.
+(() => {
+  const btn = document.getElementById("share-view"), msg = document.getElementById("share-msg");
+  if (btn) {
+    const say = t => { msg.textContent = t; btn.textContent = t; clearTimeout(btn._t);
+      btn._t = setTimeout(() => { btn.textContent = "Share this view"; msg.textContent = ""; }, 2500); };
+    btn.addEventListener("click", async () => {
+      const url = location.href;
+      if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+        try { await navigator.share({ title: document.title, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      }
+      try { await navigator.clipboard.writeText(url); say("Link copied"); hideBox(); }
+      catch (e) { showBox(url); }
+    });
+    // Where the clipboard is blocked (some in-app browsers; window.prompt can fail there too), show the
+    // link as selected text under the button so it can be copied by hand.
+    const box = document.getElementById("share-box"), field = document.getElementById("share-url");
+    const hideBox = () => { box.hidden = true; };
+    const showBox = (url) => {
+      field.value = url; box.hidden = false; field.focus(); field.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      if (ok) { hideBox(); btn.focus(); say("Link copied"); }   // copied after all: nothing left to do by hand
+      else { msg.textContent = "Copy the link shown below the button."; }
+    };
+    document.getElementById("share-close").addEventListener("click", () => { hideBox(); btn.focus(); });
+    field.addEventListener("focus", () => field.select());
+    field.addEventListener("keydown", (e) => { if (e.key === "Escape") { hideBox(); btn.focus(); } });
+  }
+  const STATE_TOOLS = ["cattleprices", "drought"];
+  const carry = a => {
+    let st = ""; try { st = (new URLSearchParams(location.search).get("state") || "").toLowerCase(); } catch (e) { /* no query */ }
+    const tool = a.dataset.tool || a.dataset.toolLink, hash = a.dataset.toolLink ? new URL(a.href, location.href).hash : "";
+    const base = `../${tool}/`;
+    a.href = (STATE_TOOLS.includes(tool) && /^[a-z]{2}$/.test(st) ? `${base}?state=${st}` : base) + hash;
+  };
+  document.querySelectorAll("a[data-tool], a[data-tool-link]").forEach(a => ["pointerdown", "focus", "mouseenter", "click"].forEach(ev => a.addEventListener(ev, () => carry(a))));
+})();
+
+// Visit counts (GoatCounter): which tabs people open and how often they share or print, as plain events with no
+// identity attached. Named "<tool>: <tab label>"; nothing is sent when the counter didn't load. The numbers typed
+// into the estimator are never sent.
+(() => {
+  const tool = location.pathname.split("/").filter(Boolean).pop() || "page";
+  const count = path => { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path, title: path, event: true }); } catch (e) { /* counting never breaks the page */ } };
+  document.addEventListener("click", e => {
+    const t = e.target.closest('[role="tab"]');
+    if (t) count(`${tool}: ${t.textContent.trim()}`);
+    if (e.target.closest("#share-view")) count(`${tool}: share`);
+    if (e.target.closest("#print")) count(`${tool}: print`);
+  });
+})();
+</script>
+
+</body>
+</html>
